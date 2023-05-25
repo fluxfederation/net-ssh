@@ -64,9 +64,8 @@ module Net
             end
           end
 
-          if name =~ /-gcm/
-            cipher.extend(Net::SSH::Transport::AEADAESGCM)
-          end
+          cipher.extend(Net::SSH::Transport::AEADAESGCM) if name =~ /-gcm/
+
           cipher.iv = Net::SSH::Transport::KeyExpander.expand_key(cipher.iv_len, options[:iv], options)
 
           key_len = cipher.key_len

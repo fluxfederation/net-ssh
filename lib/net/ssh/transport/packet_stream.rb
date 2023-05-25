@@ -182,7 +182,6 @@ module Net
 
             encrypted_data = client.update_cipher(unencrypted_data) << client.final_cipher
 
-
             message = encrypted_data + mac
           end
 

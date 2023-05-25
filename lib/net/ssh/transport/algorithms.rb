@@ -473,8 +473,6 @@ module Net
           #
           # RFC 5647
           # If AES-GCM is selected as the encryption algorithm for a given tunnel, AES-GCM MUST also be selected as the (MAC) algorithm.
-          # When aesXXX-gcm is used, mac algorithm is implicit, so we have to use a kind of placeholder, adding the aesXXX-gcm under the hmac options seem out of place.
-
           aead_client, aead_server = case encryption_client
                                      when "aes256-gcm@openssh.com" then "aes256-gcm@openssh.com"
                                      when "aes128-gcm@openssh.com" then "aes128-gcm@openssh.com"
