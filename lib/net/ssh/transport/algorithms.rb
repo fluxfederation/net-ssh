@@ -466,14 +466,19 @@ module Net
           cipher_client = CipherFactory.get(encryption_client, parameters.merge(iv: iv_client, key: key_client, encrypt: true))
           cipher_server = CipherFactory.get(encryption_server, parameters.merge(iv: iv_server, key: key_server, decrypt: true))
 
-          # When aesXXX-gcm is used, mac algorithm is implicit, so we have to use a kind of placeholder.
-          aead_client, aead_server = nil
+          # OpenSSH AES-GCM
+          # AES-GCM is only negotiated as the cipher algorithms "aes128-gcm@openssh.com" or "aes256-gcm@openssh.com" and
+          # never as an MAC algorithm. Additionally, if AES-GCM is selected as the cipher the exchanged MAC algorithms
+          # are ignored and there doesn't have to be a matching MAC.
+          #
+          # RFC 5647
+          # If AES-GCM is selected as the encryption algorithm for a given tunnel, AES-GCM MUST also be selected as the (MAC) algorithm.
+          # When aesXXX-gcm is used, mac algorithm is implicit, so we have to use a kind of placeholder, adding the aesXXX-gcm under the hmac options seem out of place.
 
-          aead_client = 'aes128-gcm@openssh.com' if cipher_client.name == 'id-aes128-GCM'
-          aead_server = 'aes128-gcm@openssh.com' if cipher_server.name == 'id-aes128-GCM'
-
-          aead_client = 'aes256-gcm@openssh.com' if cipher_client.name == 'id-aes256-GCM'
-          aead_server = 'aes256-gcm@openssh.com' if cipher_server.name == 'id-aes256-GCM'
+          aead_client, aead_server = case encryption_client
+                                     when "aes256-gcm@openssh.com" then "aes256-gcm@openssh.com"
+                                     when "aes128-gcm@openssh.com" then "aes128-gcm@openssh.com"
+                                     end
 
           mac_client = HMAC.get(aead_client || hmac_client, mac_key_client, parameters)
           mac_server = HMAC.get(aead_server || hmac_server, mac_key_server, parameters)

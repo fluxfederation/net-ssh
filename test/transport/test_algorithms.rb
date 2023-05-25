@@ -359,21 +359,13 @@ module Transport
     def install_mock_algorithm_lookups(options = {})
       params = { shared: shared_secret.to_ssh, hash: session_id, digester: hashing_algorithm }
 
-      klass = Class.new do
-        attr_accessor :name
-
-        def initialize(name)
-          @name = name
-        end
-      end
-
       Net::SSH::Transport::CipherFactory.expects(:get)
                                         .with(options[:client_cipher] || "aes256-ctr", params.merge(iv: key("A"), key: key("C"), encrypt: true))
-                                        .returns(klass.new(:client_cipher))
+                                        .returns(:client_cipher)
 
       Net::SSH::Transport::CipherFactory.expects(:get)
                                         .with(options[:server_cipher] || "aes256-ctr", params.merge(iv: key("B"), key: key("D"), decrypt: true))
-                                        .returns(klass.new(:server_cipher))
+                                        .returns(:server_cipher)
 
       Net::SSH::Transport::HMAC.expects(:get).with(options[:client_hmac] || "hmac-sha2-256", key("E"), params).returns(:client_hmac)
       Net::SSH::Transport::HMAC.expects(:get).with(options[:server_hmac] || "hmac-sha2-256", key("F"), params).returns(:server_hmac)
@@ -436,8 +428,8 @@ module Transport
       assert !algorithms.pending?
       assert !transport.client_options[:compression]
       assert !transport.server_options[:compression]
-      assert_equal :client_cipher, transport.client_options[:cipher].name
-      assert_equal :server_cipher, transport.server_options[:cipher].name
+      assert_equal :client_cipher, transport.client_options[:cipher]
+      assert_equal :server_cipher, transport.server_options[:cipher]
       assert_equal :client_hmac, transport.client_options[:hmac]
       assert_equal :server_hmac, transport.server_options[:hmac]
     end
