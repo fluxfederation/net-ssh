@@ -474,8 +474,8 @@ module Net
           # RFC 5647
           # If AES-GCM is selected as the encryption algorithm for a given tunnel, AES-GCM MUST also be selected as the (MAC) algorithm.
           aead_client, aead_server = case encryption_client
-                                     when "aes256-gcm@openssh.com" then "aes256-gcm@openssh.com"
-                                     when "aes128-gcm@openssh.com" then "aes128-gcm@openssh.com"
+                                     when "aes256-gcm@openssh.com" then ["aes256-gcm@openssh.com", "aes256-gcm@openssh.com"]
+                                     when "aes128-gcm@openssh.com" then ["aes128-gcm@openssh.com", "aes128-gcm@openssh.com"]
                                      end
 
           mac_client = HMAC.get(aead_client || hmac_client, mac_key_client, parameters)
