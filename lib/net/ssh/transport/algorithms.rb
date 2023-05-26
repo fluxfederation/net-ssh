@@ -44,7 +44,7 @@ module Net
                   diffie-hellman-group14-sha256
                   diffie-hellman-group14-sha1],
 
-          encryption: %w[aes256-ctr aes192-ctr aes128-ctr],
+          encryption: %w[aes256-ctr aes192-ctr aes128-ctr aes256-gcm@openssh.com aes128-gcm@openssh.com],
 
           hmac: %w[hmac-sha2-512-etm@openssh.com hmac-sha2-256-etm@openssh.com
                    hmac-sha2-512 hmac-sha2-256
@@ -405,7 +405,6 @@ module Net
         # #negotiate_algorithms.
         def negotiate(algorithm)
           match = self[algorithm].find { |item| @server_data[algorithm].include?(item) }
-
           if match.nil?
             raise Net::SSH::Exception, "could not settle on #{algorithm} algorithm\n"\
               "Server #{algorithm} preferences: #{@server_data[algorithm].join(',')}\n"\
@@ -467,8 +466,20 @@ module Net
           cipher_client = CipherFactory.get(encryption_client, parameters.merge(iv: iv_client, key: key_client, encrypt: true))
           cipher_server = CipherFactory.get(encryption_server, parameters.merge(iv: iv_server, key: key_server, decrypt: true))
 
-          mac_client = HMAC.get(hmac_client, mac_key_client, parameters)
-          mac_server = HMAC.get(hmac_server, mac_key_server, parameters)
+          # OpenSSH AES-GCM
+          # AES-GCM is only negotiated as the cipher algorithms "aes128-gcm@openssh.com" or "aes256-gcm@openssh.com" and
+          # never as an MAC algorithm. Additionally, if AES-GCM is selected as the cipher the exchanged MAC algorithms
+          # are ignored and there doesn't have to be a matching MAC.
+          #
+          # RFC 5647
+          # If AES-GCM is selected as the encryption algorithm for a given tunnel, AES-GCM MUST also be selected as the (MAC) algorithm.
+          aead_client, aead_server = case encryption_client
+                                     when "aes256-gcm@openssh.com" then ["aes256-gcm@openssh.com", "aes256-gcm@openssh.com"]
+                                     when "aes128-gcm@openssh.com" then ["aes128-gcm@openssh.com", "aes128-gcm@openssh.com"]
+                                     end
+
+          mac_client = HMAC.get(aead_client || hmac_client, mac_key_client, parameters)
+          mac_server = HMAC.get(aead_server || hmac_server, mac_key_server, parameters)
 
           session.configure_client cipher: cipher_client, hmac: mac_client,
                                    compression: normalize_compression_name(compression_client),
