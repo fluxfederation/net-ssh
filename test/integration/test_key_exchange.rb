@@ -4,7 +4,7 @@ require 'net/ssh'
 class TestKeyExchange < NetSSHTest
   include IntegrationTestHelpers
 
-  Net::SSH::Transport::Algorithms::DEFAULT_ALGORITHMS[:kex].each do |kex|
+  Net::SSH::Transport::Algorithms::ALGORITHMS[:kex].each do |kex|
     define_method("test_kex_#{kex}") do
       skip "diffie-hellman-group14-sha1 not supported on newer sshd" if kex == "diffie-hellman-group14-sha1" && sshd_8_or_later?
 
