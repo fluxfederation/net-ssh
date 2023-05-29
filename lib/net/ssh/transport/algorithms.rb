@@ -23,75 +23,76 @@ module Net
         include Loggable
         include Constants
 
-        # Define the default algorithms, in order of preference, supported by Net::SSH.
-        DEFAULT_ALGORITHMS = {
-          host_key: %w[ecdsa-sha2-nistp521-cert-v01@openssh.com
+        ALGORITHMS = {
+          host_key: %w[ssh-rsa
+                       ssh-dss
+                       sh-rsa-cert-v01@openssh.com
+                       ssh-rsa-cert-v00@openssh.com
+                       ecdsa-sha2-nistp521-cert-v01@openssh.com
                        ecdsa-sha2-nistp384-cert-v01@openssh.com
                        ecdsa-sha2-nistp256-cert-v01@openssh.com
                        ecdsa-sha2-nistp521
                        ecdsa-sha2-nistp384
                        ecdsa-sha2-nistp256
-                       ssh-rsa-cert-v01@openssh.com
-                       ssh-rsa-cert-v00@openssh.com
-                       ssh-rsa
                        rsa-sha2-256
                        rsa-sha2-512],
 
-          kex: %w[ecdh-sha2-nistp521
-                  ecdh-sha2-nistp384
-                  ecdh-sha2-nistp256
+          kex: %w[diffie-hellman-group-exchange-sha1
+                  diffie-hellman-group1-sha1
+                  diffie-hellman-group14-sha1
                   diffie-hellman-group-exchange-sha256
                   diffie-hellman-group14-sha256
-                  diffie-hellman-group14-sha1],
+                  ecdh-sha2-nistp521
+                  ecdh-sha2-nistp384
+                  ecdh-sha2-nistp256],
 
-          encryption: %w[aes256-ctr aes192-ctr aes128-ctr aes256-gcm@openssh.com aes128-gcm@openssh.com],
+          encryption: %w[aes128-cbc
+                         3des-cbc
+                         blowfish-cbc
+                         cast128-cbc
+                         aes192-cbc
+                         aes256-cbc
+                         rijndael-cbc@lysator.liu.se
+                         idea-cbc
+                         aes128-ctr
+                         aes192-ctr
+                         aes256-ctr
+                         cast128-ctr
+                         blowfish-ctr
+                         3des-ctr
+                         aes256-gcm@openssh.com
+                         aes128-gcm@openssh.com
+                         none],
 
-          hmac: %w[hmac-sha2-512-etm@openssh.com hmac-sha2-256-etm@openssh.com
+          hmac: %w[hmac-sha1
+                   hmac-md5
+                   hmac-sha1-96
+                   hmac-md5-96
+                   hmac-ripemd160 hmac-ripemd160@openssh.com
+                   hmac-sha2-256 hmac-sha2-512 hmac-sha2-256-96
+                   hmac-sha2-512-96
+                   hmac-sha2-512-etm@openssh.com hmac-sha2-256-etm@openssh.com
                    hmac-sha2-512 hmac-sha2-256
-                   hmac-sha1]
+                   none],
+
+          compression: %w[none zlib@openssh.com zlib],
+          language: %w[]
         }.freeze
 
+
         if Net::SSH::Authentication::ED25519Loader::LOADED
-          DEFAULT_ALGORITHMS[:host_key].unshift(
+          ALGORITHMS[:host_key].unshift(
             'ssh-ed25519-cert-v01@openssh.com',
             'ssh-ed25519'
           )
         end
 
         if Net::SSH::Transport::Kex::Curve25519Sha256Loader::LOADED
-          DEFAULT_ALGORITHMS[:kex].unshift(
+          ALGORITHMS[:kex].unshift(
             'curve25519-sha256',
             'curve25519-sha256@libssh.org'
           )
         end
-
-        # Define all algorithms, with the deprecated, supported by Net::SSH.
-        ALGORITHMS = {
-          host_key: DEFAULT_ALGORITHMS[:host_key] + %w[ssh-dss],
-
-          kex: DEFAULT_ALGORITHMS[:kex] +
-               %w[diffie-hellman-group-exchange-sha1
-                  diffie-hellman-group1-sha1],
-
-          encryption: DEFAULT_ALGORITHMS[:encryption] +
-                      %w[aes256-cbc aes192-cbc aes128-cbc
-                         rijndael-cbc@lysator.liu.se
-                         blowfish-ctr blowfish-cbc
-                         cast128-ctr cast128-cbc
-                         3des-ctr 3des-cbc
-                         idea-cbc
-                         none],
-
-          hmac: DEFAULT_ALGORITHMS[:hmac] +
-                %w[hmac-sha2-512-96 hmac-sha2-256-96
-                   hmac-sha1-96
-                   hmac-ripemd160 hmac-ripemd160@openssh.com
-                   hmac-md5 hmac-md5-96
-                   none],
-
-          compression: %w[none zlib@openssh.com zlib],
-          language: %w[]
-        }.freeze
 
         # The underlying transport layer session that supports this object
         attr_reader :session
@@ -260,7 +261,7 @@ module Net
 
           ALGORITHMS.each do |algorithm, supported|
             algorithms[algorithm] = compose_algorithm_list(
-              supported, options[algorithm] || DEFAULT_ALGORITHMS[algorithm],
+              supported, options[algorithm] || ALGORITHMS[algorithm],
               options[:append_all_supported_algorithms]
             )
           end
