@@ -42,13 +42,24 @@ module Net
                   ecdh-sha2-nistp256
                   diffie-hellman-group-exchange-sha256
                   diffie-hellman-group14-sha256
-                  diffie-hellman-group14-sha1],
+                  diffie-hellman-group14-sha1
+                  diffie-hellman-group-exchange-sha1
+                  diffie-hellman-group1-sha1],
 
-          encryption: %w[aes256-ctr aes192-ctr aes128-ctr aes256-gcm@openssh.com aes128-gcm@openssh.com],
+          encryption: %w[aes256-ctr aes192-ctr aes128-ctr aes256-gcm@openssh.com aes128-gcm@openssh.com
+                         aes256-cbc aes192-cbc aes128-cbc rijndael-cbc@lysator.liu.se
+                         blowfish-ctr blowfish-cbc cast128-ctr cast128-cbc 3des-ctr 3des-cbc
+                         idea-cbc
+                         none],
 
           hmac: %w[hmac-sha2-512-etm@openssh.com hmac-sha2-256-etm@openssh.com
                    hmac-sha2-512 hmac-sha2-256
-                   hmac-sha1]
+                   hmac-sha1
+                   hmac-sha2-512-96 hmac-sha2-256-96
+                   hmac-sha1-96
+                   hmac-ripemd160 hmac-ripemd160@openssh.com
+                   hmac-md5 hmac-md5-96
+                   none]
         }.freeze
 
         if Net::SSH::Authentication::ED25519Loader::LOADED
@@ -260,7 +271,7 @@ module Net
 
           ALGORITHMS.each do |algorithm, supported|
             algorithms[algorithm] = compose_algorithm_list(
-              supported, options[algorithm] || DEFAULT_ALGORITHMS[algorithm],
+              supported, options[algorithm] || ALGORITHMS[algorithm],
               options[:append_all_supported_algorithms]
             )
           end
