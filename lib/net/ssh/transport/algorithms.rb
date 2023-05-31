@@ -48,9 +48,8 @@ module Net
 
           encryption: %w[aes256-ctr aes192-ctr aes128-ctr aes256-gcm@openssh.com aes128-gcm@openssh.com],
 
-          hmac: %w[hmac-sha2-512-etm@openssh.com hmac-sha2-256-etm@openssh.com
-                   hmac-sha2-512 hmac-sha2-256
-                   hmac-sha1]
+          hmac: %w[hmac-sha1
+                   hmac-sha2-512 hmac-sha2-256]
         }.freeze
 
         if Net::SSH::Authentication::ED25519Loader::LOADED
@@ -89,6 +88,7 @@ module Net
                    hmac-sha1-96
                    hmac-ripemd160 hmac-ripemd160@openssh.com
                    hmac-md5 hmac-md5-96
+                   hmac-sha2-512-etm@openssh.com hmac-sha2-256-etm@openssh.com
                    none],
 
           compression: %w[none zlib@openssh.com zlib],
